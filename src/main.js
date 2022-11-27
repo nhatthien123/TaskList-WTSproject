@@ -1,45 +1,125 @@
-import {ref , onMounted, computed, watch} from 'vue'
+import { createApp } from 'vue'
+import App from './App.vue'
 
-const todos = ref([]);
-const name = ref('');
+import './assets/main.css'
 
+createApp(App).mount('#app')
 
-const input_content = ref('')
-const input_category = ref(null)
+window.addEventListener('load', () => {
+	todos = JSON.parse(localStorage.getItem('todos')) || [];
+	const nameInput = document.querySelector('#name');
+	const newTodoForm = document.querySelector('#new-todo-form');
+    
+	const username = localStorage.getItem('username') || '';
 
+	nameInput.value = username;
 
-const todos_asc = computed(() => todos.value.sort((a, b)=>{
-   
-  return b.createdAt - a.createdAt
-})) 
+	nameInput.addEventListener('change', (e) => {
+		localStorage.setItem('username', e.target.value);
+	})
 
-const addTodo = ()  =>{
-  if(input_content.value.trim()==="" || input_category.value === null ){
-    // return window.alert("One ỏ More fields is empty! Pls check it and try again!")
-    //  || input_date.value.trim()===""
-  }
-  todos.value.push({
-    content:input_content.value,
-    category: input_category.value,
-    done: false,
-    createdAt: new Date().getTime()
-  })
-  input_content.value = ''
-  input_category.value = null
+	newTodoForm.addEventListener('submit', e => {
+		e.preventDefault();
 
-  }
-  const removeTodo = todo =>{
-    todos.value = todos.value.filter(t => t !== todo)
-  }
-  watch(todos, newVal => {
-    localStorage.setItem('todos', JSON.stringify(newVal))
-  }, {deep: true})
+		const todo = {
+			content: e.target.elements.content.value,
+			category: e.target.elements.category.value,
+			done: false,
+			createdAt: new Date().getTime()
+		}
 
-  watch(name, (newVal)=> {
-    localStorage.setItem('name', newVal)
-  })
+		todos.push(todo);
 
-  onMounted(()=>{
-    name.value = localStorage.getItem('name') || ''
-    todos.value = JSON.parse(localStorage.getItem('todos')) || []
-  });
+		localStorage.setItem('todos', JSON.stringify(todos));
+
+		// Reset the form
+		e.target.reset();
+
+		DisplayTodos()
+	})
+
+	DisplayTodos()
+})
+
+function DisplayTodos () {
+	const todoList = document.querySelector('#todo-list');
+	todoList.innerHTML = "";
+
+	todos.forEach(todo => {
+		const todoItem = document.createElement('div');
+		todoItem.classList.add('todo-item');
+
+		const label = document.createElement('label');
+		const input = document.createElement('input');
+		const span = document.createElement('span');
+		const content = document.createElement('div');
+		const actions = document.createElement('div');
+		const edit = document.createElement('button');
+		const deleteButton = document.createElement('button');
+
+		input.type = 'checkbox';
+		input.checked = todo.done;
+		span.classList.add('bubble');
+		if (todo.category == 'personal') {
+			span.classList.add('personal');
+		} else {
+			span.classList.add('business');
+		}
+		content.classList.add('todo-content');
+		actions.classList.add('actions');
+		edit.classList.add('edit');
+		deleteButton.classList.add('delete');
+
+		content.innerHTML = `<input type="text" value="${todo.content}" readonly>`;
+		edit.innerHTML = 'Edit';
+		deleteButton.innerHTML = 'Delete';
+
+		label.appendChild(input);
+		label.appendChild(span);
+		actions.appendChild(edit);
+		actions.appendChild(deleteButton);
+		todoItem.appendChild(label);
+		todoItem.appendChild(content);
+		todoItem.appendChild(actions);
+
+		todoList.appendChild(todoItem);
+
+		if (todo.done) {
+			todoItem.classList.add('done');
+		}
+		
+		input.addEventListener('change', (e) => {
+			todo.done = e.target.checked;
+			localStorage.setItem('todos', JSON.stringify(todos));
+
+			if (todo.done) {
+				todoItem.classList.add('done');
+			} else {
+				todoItem.classList.remove('done');
+			}
+
+			DisplayTodos()
+
+		})
+
+		edit.addEventListener('click', (e) => {
+			const input = content.querySelector('input');
+			input.removeAttribute('readonly');
+			input.focus();
+			input.addEventListener('blur', (e) => {
+				input.setAttribute('readonly', true);
+				todo.content = e.target.value;
+				localStorage.setItem('todos', JSON.stringify(todos));
+				DisplayTodos()
+
+			})
+		})
+
+		deleteButton.addEventListener('click', (e) => {
+			todos = todos.filter(t => t != todo);
+			localStorage.setItem('todos', JSON.stringify(todos));
+			DisplayTodos()
+		})
+
+	})
+}

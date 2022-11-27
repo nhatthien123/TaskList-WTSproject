@@ -1,101 +1,76 @@
 
-
 <template>
-	<!-- App Wrapper -->
-	<main class="app">
-		<!-- Greeting -->
-		<section class="greeting">
-			<h2 class="title">
-				What's up, <input type="text" id="name" placeholder="Name here" />
-			</h2>
-		</section>
-		<!-- End of Greeting -->
-		
-		<!-- New Todo -->
-		<section class="create-todo">
-			<h3>CREATE A TODO</h3>
-			<form id="new-todo-form">
-				<h4>What's on your todo?</h4>
-				<input 
-					type="text" 
-					placeholder="e.g. Get some milk"
-					name="content"
-					id="content" />
-				
-				<h4>Pick a category</h4>
-				<div class="options">
-					<label>
-						<input type="radio" name="category" id="category1" value="business" /> 
-						<span class="bubble business"></span>
-						<div>Business</div>
-					</label>
-					<label>
-						<input type="radio" name="category" id="category2" value="personal" />
-						<span class="bubble personal"></span>
-						<div>Personal</div>
-					</label>
-				</div>
-
-				<input type="submit" value="Add todo" />
-			</form>
-		</section>
-		<!-- End of New Todo -->
-
-		<!-- Todo List -->
-		<section class="todo-list">
-  		<h3>TODO LIST </h3>
-      <!-- ({{todoList.length}}) -->
-			<div class="list" id="todo-list">
-        <div v-for="todo in todoList" :class="`todo-item ${todo.done && 
-          'done'}`">
-          <label>
-            <input type="checkbox" v-model="todo.done">
-            <span :class="`bubble ${todo.category}`"></span>
+  <div class="login">
+      <h1>Login</h1>
+      <form action="/auth" method="post">
+          <label for="username">
+              <!-- font awesome icon -->
+              <i class="fas fa-user"></i>
           </label>
-          <div class="todo-content">
-            <input type="text" 
-                   class="showTask" 
-                   name="showTask" 
-                   v-model="todo.content"/>
-          </div>
-          <!-- <div class="todo-date">
-            <h3>
-              <input type="text" class="showDate" name="showTask" v-model="todo.date">
-            </h3>
-          
-          </div> -->
-          <div class="actions">
-            <button class="delete" @click="removeTodo(todo)">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-
-		</section>
-		<!-- End of Todo List -->
-
-	</main>
-	<!-- End of App Wrapper -->
-
-
+          <input type="text" name="username" placeholder="Username" id="username" required>
+          <label for="password">
+              <i class="fas fa-lock"></i>
+          </label>
+          <input type="password" name="password" placeholder="Password" id="password" required>
+          <input type="submit" value="Login">
+      </form>
+  </div>
 </template>
-<!-- /* function choose date in calendar */
-/* --------------Start------------- */ -->
-<script >
-  import Datepicker from 'vue3-datepicker';
-import dateChooser from './components/dateChooser.vue';
-export default {
-  name: 'chooserApp',
-  components: {
-    dateChooser
+<style src="../src/assets/login.css"></style>
+
+<script>
+ import { Form, Field, ErrorMessage } from 'vee-validate';
+ import * as yup from 'yup';
+  export default {
+name: "Login",
+components: {
+  Form,
+  Field,
+  ErrorMessage,
+},
+data() {
+  const schema = yup.object().shape({
+    username: yup.string().required("Username is required!"),
+    password: yup.string().required("Password is required!"),
+  });
+
+  return {
+    loading: false,
+    message: "",
+    schema,
+  };
+},
+computed: {
+  loggedIn() {
+    return this.loggedIn;
   },
+},
+created() {
+  if (this.loggedIn) {
+    this.$router.push("/profile");
+  }
+},
+methods: {
+  handleLogin(user) {
+    this.loading = true;
+
+    this.$store.dispatch("auth/login", user).then(
+      () => {
+        this.$router.push("/profile");
+      },
+      (error) => {
+        this.loading = false;
+        this.message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+      }
+    );
+  },
+},
 };
+
 </script>
-<!-- /* ---------------End------------- */
-/* function choose date in calendar */ -->
 
-
-<!-- <script>
-
-</script> -->
